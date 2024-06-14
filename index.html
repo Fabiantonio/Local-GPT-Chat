@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT Local</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system,
+                BlinkMacSystemFont, 'Segoe UI', Roboto,
+                Oxygen, Ubuntu, Cantarell, 'Open Sans',
+                'Helvetica Neue', sans-serif;
+            display: grid;
+            place-content: center;
+            height: 100dvh;
+            background: #16161a;
+            margin: 0;
+            padding: 0;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            width: 400px;
+            max-width: 100%;
+            height: 78vh;
+            background: #353535;
+            border: 1px solid black;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        ul {
+            display: flex;
+            flex-direction: column;
+            list-style: none;
+            padding: 0;
+        }
+
+        .mensaje {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin: 4px 0;
+            padding: 4px;
+
+            >span:first-child {
+                width: 36px;
+                height: 36px;
+                font-size: 12px;
+                font-weight: 500;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-radius: 50%;
+                color: #121212;
+            }
+
+            p {
+                border-radius: 8px;
+                padding: 4px 8px;
+                margin: 5px;
+            }
+
+            &.usuario {
+                align-self: flex-end;
+                align-items: end;
+
+                span,
+                p {
+                    background: #faae2b;
+                    color: #fffffe;
+                }
+            }
+
+            &.bot {
+                align-self: self-start;
+
+                span,
+                p {
+                    background: #4CAF50;
+                    color: #fffffe;
+                }
+            }
+        }
+
+        form {
+            display: flex;
+
+            input {
+                border-radius: 999999px;
+                flex-grow: 1;
+                border: 0;
+                background: #353535;
+                color: #fffffe;
+                padding: 8px;
+                margin-right: 8px;
+            }
+
+            button {
+                background: #7f5af0;
+                border: 0;
+                border-radius: 8px;
+                cursor: pointer;
+                padding: 8px;
+                color: #fffffe;
+                transition: background 0.3s;
+
+                &:hover {
+                    background: #6d4cd0;
+                }
+            }
+        }
+
+        small {
+            font-size: 10px;
+            color: #888;
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            margin: auto;
+            width: 500px;
+        }
+
+        .loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            --color: hsl(0, 0%, 87%);
+            --animation: 2s ease-in-out infinite;
+        }
+
+        .loader .circle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 20px;
+            height: 20px;
+            border: solid 2px var(--color);
+            border-radius: 50%;
+            margin: 0 10px;
+            background-color: transparent;
+            animation: circle-keys var(--animation);
+        }
+
+        .loader .circle .dot {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--color);
+            animation: dot-keys var(--animation);
+        }
+
+        .loader .circle .outline {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: outline-keys var(--animation);
+        }
+
+        .circle:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .circle:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        .circle:nth-child(4) {
+            animation-delay: 0.9s;
+        }
+
+        .circle:nth-child(5) {
+            animation-delay: 1.2s;
+        }
+
+        .circle:nth-child(2) .dot {
+            animation-delay: 0.3s;
+        }
+
+        .circle:nth-child(3) .dot {
+            animation-delay: 0.6s;
+        }
+
+        .circle:nth-child(4) .dot {
+            animation-delay: 0.9s;
+        }
+
+        .circle:nth-child(5) .dot {
+            animation-delay: 1.2s;
+        }
+
+        .circle:nth-child(1) .outline {
+            animation-delay: 0.9s;
+        }
+
+        .circle:nth-child(2) .outline {
+            animation-delay: 1.2s;
+        }
+
+        .circle:nth-child(3) .outline {
+            animation-delay: 1.5s;
+        }
+
+        .circle:nth-child(4) .outline {
+            animation-delay: 1.8s;
+        }
+
+        .circle:nth-child(5) .outline {
+            animation-delay: 2.1s;
+        }
+
+        @keyframes circle-keys {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes dot-keys {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(0);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes outline-keys {
+            0% {
+                transform: scale(0);
+                outline: solid 20px var(--color);
+                outline-offset: 0;
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                outline: solid 0 transparent;
+                outline-offset: 20px;
+                opacity: 0;
+            }
+        }
+    </style>
+
+
+    <script type="module">
+        import { CreateWebWorkerMLCEngine } from "https://esm.run/@mlc-ai/web-llm"
+
+        const $ = el => document.querySelector(el)
+
+        const $form = $('form')
+        const $input = $('input')
+        const $template = $('#message-template')
+        const $mensajes = $('ul')
+        const $container = $('main')
+        const $button = $('button')
+        const $info = $('small')
+        const $loading = $('.loader')
+
+        let messages = []
+
+        const SELECTED_MODEL = 'gemma-2b-it-q4f16_1-MLC'
+
+        const engine = await CreateWebWorkerMLCEngine(
+            new Worker('/worker.js', { type: 'module' }),
+            SELECTED_MODEL,
+            {
+                initProgressCallback: (info) => {
+                    $info.textContent = info.text
+                    if (info.progress == 1) {
+                        $loading.parentNode.removeChild($loading)
+                        $button.removeAttribute('disabled')
+                        agregarMensaje("¡Hola! Soy un ChatGPT que se ejecuta completamente en tu navegador. ¿En qué puedo ayudarte hoy?", 'bot')
+                    }
+                }
+            }
+        )
+
+
+        $form.addEventListener('submit', async (event) => {
+            event.preventDefault()
+            const mensajeText = $input.value.trim()
+            if (mensajeText !== '') {
+                $input.value = ''
+            }
+
+            agregarMensaje(mensajeText, 'usuario')
+            $button.setAttribute('disabled', '')
+
+            const mensajeUsuario = {
+                role: 'user',
+                content: mensajeText
+            }
+
+            messages.push(mensajeUsuario)
+
+            const chunks = await engine.chat.completions.create({
+                messages,
+                stream: true
+            })
+
+            let reply = ""
+
+            const $botMessage = agregarMensaje("", 'bot')
+
+            for await (const chunk of chunks) {
+                const choice = chunk.choices[0]
+                const content = choice?.delta?.content ?? ""
+                reply += content
+                $botMessage.textContent = reply
+            }
+
+            $button.removeAttribute('disabled')
+
+            messages.push({
+                role: 'assistant',
+                content: reply
+            })
+            $container.scrollTop = $container.scrollHeight
+        })
+
+        function agregarMensaje(text, sender) {
+            const clonedTemplate = $template.content.cloneNode(true)
+            const $newMessage = clonedTemplate.querySelector('.mensaje')
+
+            const $who = $newMessage.querySelector('span')
+            const $text = $newMessage.querySelector('p')
+
+            $text.textContent = text
+            $who.textContent = sender === 'bot' ? 'IA' : 'Tú'
+            $newMessage.classList.add(sender)
+
+            $mensajes.appendChild($newMessage)
+
+            $container.scrollTop = $container.scrollHeight
+
+            return $text
+        }
+
+    </script>
+
+</head>
+
+<body>
+    <main>
+        <ul></ul>
+        <div class="loader">
+            <div class="circle">
+                <div class="dot"></div>
+                <div class="outline"></div>
+            </div>
+            <div class="circle">
+                <div class="dot"></div>
+                <div class="outline"></div>
+            </div>
+            <div class="circle">
+                <div class="dot"></div>
+                <div class="outline"></div>
+            </div>
+            <div class="circle">
+                <div class="dot"></div>
+                <div class="outline"></div>
+            </div>
+        </div>
+    </main>
+
+    <form>
+        <input placeholder="Escribe tu mensaje aqui...">
+        <button disabled>Enviar</button>
+    </form>
+
+    <small>&nbsp;</small>
+
+    <template id="message-template">
+        <li class="mensaje">
+            <span></span>
+            <p></p>
+        </li>
+    </template>
+
+</body>
+
+</html>
